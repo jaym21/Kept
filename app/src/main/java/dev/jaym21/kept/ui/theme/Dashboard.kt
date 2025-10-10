@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 data class SummaryCardData(val title: String, val value: String)
 data class DuePayment(val id: Int, val title: String, val subtitle: String, val amount: String, val status: PaymentStatus)
@@ -47,9 +50,20 @@ private fun DashboardContent(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-
+        DashboardTopBar()
 
     }
+}
+
+@Composable
+private fun DashboardTopBar() {
+    Text(
+        text = "Dashboard",
+        color = MaterialTheme.colorScheme.onBackground,
+        fontSize = 26.sp,
+        fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 
