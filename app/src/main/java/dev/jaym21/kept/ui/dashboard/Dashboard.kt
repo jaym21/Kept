@@ -1,4 +1,4 @@
-package dev.jaym21.kept.ui.theme
+package dev.jaym21.kept.ui.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.jaym21.kept.ui.theme.KeptTheme
 
 data class SummaryCardData(val title: String, val value: String)
 data class DuePayment(val id: Int, val title: String, val subtitle: String, val amount: String, val status: PaymentStatus)
