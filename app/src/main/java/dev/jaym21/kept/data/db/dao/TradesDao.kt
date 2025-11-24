@@ -17,7 +17,7 @@ interface TradesDao {
     suspend fun insertTrade(trade: TradeEntity)
 
     @Query("SELECT * FROM trades ORDER BY tradeDate ASC")
-    suspend fun getAllTrades(): Flow<List<TradeEntity>>
+    fun getAllTrades(): Flow<List<TradeEntity>>
 
     @Query("DELETE FROM trades")
     suspend fun deleteAllTrades()

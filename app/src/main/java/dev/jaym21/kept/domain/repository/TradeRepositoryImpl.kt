@@ -18,7 +18,7 @@ class TradeRepositoryImpl @Inject constructor(private val dao: TradesDao): Trade
         dao.insertTrade(trade.toEntity())
     }
 
-    override suspend fun getAllTrades(): Flow<List<Trade>> {
+    override fun getAllTrades(): Flow<List<Trade>> {
         return dao.getAllTrades().map { list ->
             list.map { it.toDomain() }
         }

@@ -7,6 +7,6 @@ interface TradeRepository {
 
     suspend fun insertTrades(trades: List<Trade>)
     suspend fun insertTrade(trade: Trade)
-    suspend fun getAllTrades(): Flow<List<Trade>>
+    fun getAllTrades(): Flow<List<Trade>>
     suspend fun clearAllTrades()
 }
