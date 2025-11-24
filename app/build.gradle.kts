@@ -76,4 +76,16 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+
+    //pdf text extractor for Android
+    implementation(libs.pdfbox.android)
+    // or for JVM-specific utilities
+    implementation(libs.pdfbox)
+
+    //OCR for scanned PDFs
+    implementation(libs.tess.two)
+
+    //coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 }
