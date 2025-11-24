@@ -8,7 +8,7 @@ import dev.jaym21.kept.data.db.entities.TradeEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface TradeDao {
+interface TradesDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrades(trades: List<TradeEntity>)
