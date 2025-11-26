@@ -56,6 +56,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.mockk)
+    testImplementation(libs.pdfbox)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -81,9 +82,6 @@ dependencies {
     implementation(libs.pdfbox.android)
     // or for JVM-specific utilities
     implementation(libs.pdfbox)
-
-    //OCR for scanned PDFs
-    implementation(libs.tess.two)
 
     //coroutines
     implementation(libs.kotlinx.coroutines.core)
