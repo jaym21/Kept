@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.jaym21.kept"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -38,6 +38,9 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    hilt {
+        enableAggregatingTask = false
     }
 }
 
@@ -81,7 +84,7 @@ dependencies {
     //pdf text extractor for Android
     implementation(libs.pdfbox.android)
     // or for JVM-specific utilities
-    implementation(libs.pdfbox)
+//    implementation(libs.pdfbox)
 
     //coroutines
     implementation(libs.kotlinx.coroutines.core)

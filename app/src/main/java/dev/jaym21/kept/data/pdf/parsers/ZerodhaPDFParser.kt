@@ -56,7 +56,8 @@ class ZerodhaPDFParser: BrokerPDFParser {
             } else {
                 //fallback: try split-by-spaces heuristic if line contains BUY or SELL
                 if (line.contains(" BUY ", ignoreCase = true) || line.contains(" SELL ", ignoreCase = true)) {
-
+                    val parsed = tryParseLineHeuristic(line, tradeDateMillis)
+                    if (parsed != null) trades.add(parsed)
                 }
 
             }
@@ -129,5 +130,35 @@ class ZerodhaPDFParser: BrokerPDFParser {
             line.contains("BSE", true) -> "BSE"
             else -> "NSE"
         }
+    }
+
+    private fun tryParseLineHeuristic(line: String, tradeDateMillis: Long): Trade? {
+        val tokens = line.split(Regex("\\s+"))
+        val actionIndex = tokens.indexOfFirst { it.equals("BUY", true) || it.equals("SELL", true) }
+        if (actionIndex == -1) return null
+        val action = tokens[actionIndex].uppercase(Locale.getDefault())
+        //find numeric tokens after action
+        val numbers = tokens.mapNotNull { t ->
+            val num = t.replace(",", "")
+            if (num.matches(Regex("""^-?\d+(\.\d+)?$"""))) num.toDouble() else null
+        }
+        if (numbers.size >= 2) {
+            val qty = numbers[0]
+            val price = numbers[1]
+            val symbol = tokens.take(actionIndex).joinToString(" ").trim().uppercase(Locale.getDefault())
+            if (symbol.isEmpty() || qty <= 0.0 || price <= 0.0) return null
+            return Trade(
+                symbol = symbol,
+                isin = null,
+                exchange = inferExchangeFromLine(line),
+                tradeType = if (action == "BUY") TradeType.BUY else TradeType.SELL,
+                quantity = qty,
+                price = price,
+                tradeDate = tradeDateMillis,
+                brokerage = 0.0,
+                taxes = 0.0
+            )
+        }
+        return null
     }
 }
