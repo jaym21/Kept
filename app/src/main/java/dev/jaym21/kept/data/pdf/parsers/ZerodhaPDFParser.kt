@@ -65,12 +65,6 @@ class ZerodhaPDFParser: BrokerPDFParser {
         return trades
     }
 
-    // normalize CRLF and collapse repeated spaces to simplify heuristics while keeping lines
-    private fun normalizeLines(text: String): List<String> {
-        val norm = text.replace("\r\n", "\n").replace('\r', '\n')
-        return norm.split('\n').map { it.trimEnd() }.filter { it.isNotBlank() }
-    }
-
     private fun extractTradeDate(lines: List<String>): Long? {
         val header = lines.take(30).joinToString(" ")
         val dateRegexes = listOf(

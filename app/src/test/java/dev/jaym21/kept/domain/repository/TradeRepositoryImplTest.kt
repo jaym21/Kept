@@ -1,4 +1,4 @@
-package dev.jaym21.kept.data.repository
+package dev.jaym21.kept.domain.repository
 
 import dev.jaym21.kept.data.db.dao.TradesDao
 import dev.jaym21.kept.data.db.entities.TradeEntity

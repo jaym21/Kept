@@ -1,4 +1,4 @@
-package dev.jaym21.kept.data.mapper
+package dev.jaym21.kept.domain.mapper
 
 import dev.jaym21.kept.data.db.entities.TradeEntity
 import dev.jaym21.kept.domain.mapper.toDomain
