@@ -5,8 +5,9 @@ import com.tom_roush.pdfbox.text.PDFTextStripper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import javax.inject.Inject
 
-class PDFBoxTextExtractor: PDFTextExtractor {
+class PDFBoxTextExtractor @Inject constructor(): PDFTextExtractor {
 
     override suspend fun extractTextFromFile(filePath: String): String = withContext(Dispatchers.IO) {
         val file = File(filePath)

@@ -6,8 +6,9 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 
-class ZerodhaPDFParser: BrokerPDFParser {
+class ZerodhaPDFParser @Inject constructor(): BrokerPDFParser {
 
     override fun canParse(extractedText: String): Boolean {
         val sample = extractedText.take(1200).uppercase(Locale.getDefault())
@@ -15,57 +16,19 @@ class ZerodhaPDFParser: BrokerPDFParser {
     }
 
     override fun parse(extractedText: String): List<Trade> {
-        val trades =  mutableListOf<Trade>()
-        val lines = extractedText.split("\n")
+        val lines = extractedText.lines()
+        val tradeDateMillis = extractTradeDate(lines)
 
-        val tradeDateMillis = extractTradeDate(lines) ?: System.currentTimeMillis()
-        val tradeLineRegex = Regex("""([A-Z0-9\.\- ]+)\s+(EQ|FUT|OPT)\s+(BUY|SELL)\s+(\d+)\s+([\d,]+\.\d+)""", RegexOption.IGNORE_CASE)
-
-        lines.forEach { line ->
-            val match = tradeLineRegex.find(line)
-            if (match != null) {
-                try {
-                    val symbolRaw = match.groupValues[1].trim()
-                    val segmentRaw = match.groupValues[2].trim()
-                    val tradeActionRaw = match.groupValues[3].trim()
-                    val qtyRaw = match.groupValues[4].trim()
-                    val priceRaw = match.groupValues[5].trim()
-
-                    val qty = parseNumber(qtyRaw)
-                    val price = parseNumber(priceRaw)
-                    if (qty <= 0.0 || price <= 0.0) return@forEach
-
-                    val tradeType = if (tradeActionRaw.equals("BUY", true)) TradeType.BUY else TradeType.SELL
-                    val symbol = symbolRaw.replace(Regex("\\s+"), " ").uppercase(Locale.getDefault())
-
-                    val trade = Trade(
-                        symbol = symbol,
-                        isin = null,
-                        exchange = inferExchangeFromLine(line),
-                        tradeType = tradeType,
-                        quantity = qty,
-                        price = price,
-                        tradeDate = tradeDateMillis,
-                        brokerage = 0.0,
-                        taxes = 0.0
-                    )
-                    trades.add(trade)
-                } catch (e: Exception) {
-                    //ignore malformed line — could collect warnings
-                }
-            } else {
-                //fallback: try split-by-spaces heuristic if line contains BUY or SELL
-                if (line.contains(" BUY ", ignoreCase = true) || line.contains(" SELL ", ignoreCase = true)) {
-                    val parsed = tryParseLineHeuristic(line, tradeDateMillis)
-                    if (parsed != null) trades.add(parsed)
-                }
-
+        val trades = mutableListOf<Trade>()
+        for (line in lines) {
+            parseTradeLine(line, tradeDateMillis)?.let { trade ->
+                trades += trade
             }
         }
         return trades
     }
 
-    private fun extractTradeDate(lines: List<String>): Long? {
+    private fun extractTradeDate(lines: List<String>): Long {
         val header = lines.take(30).joinToString(" ")
         val dateRegexes = listOf(
             Regex("""\b(\d{1,2}-[A-Za-z]{3}-\d{4})\b"""),
@@ -95,7 +58,7 @@ class ZerodhaPDFParser: BrokerPDFParser {
                 if (fallbackParsed != null) return fallbackParsed.time
             }
         }
-        return null
+        return System.currentTimeMillis()
     }
 
     private fun tryParseDateVariants(dateStr: String): Date? {
@@ -112,47 +75,68 @@ class ZerodhaPDFParser: BrokerPDFParser {
         return null
     }
 
-    // remove commas and other non numeric except dot and minus
-    private fun parseNumber(numStr: String): Double {
-        val cleaned = numStr.replace(",", "").replace(" ", "")
-        return try { cleaned.toDouble() } catch (e: Exception) { 0.0 }
-    }
+    private fun parseTradeLine(line: String, tradeDateMillis: Long): Trade? {
+        val trimmed = line.trim()
+        if (trimmed.isBlank()) return null
 
-    private fun inferExchangeFromLine(line: String): String {
-        return when {
-            line.contains("NSE", true) -> "NSE"
-            line.contains("BSE", true) -> "BSE"
-            else -> "NSE"
-        }
-    }
+        val parts = trimmed.split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (parts.size < 8) return null
 
-    private fun tryParseLineHeuristic(line: String, tradeDateMillis: Long): Trade? {
-        val tokens = line.split(Regex("\\s+"))
-        val actionIndex = tokens.indexOfFirst { it.equals("BUY", true) || it.equals("SELL", true) }
-        if (actionIndex == -1) return null
-        val action = tokens[actionIndex].uppercase(Locale.getDefault())
-        //find numeric tokens after action
-        val numbers = tokens.mapNotNull { t ->
-            val num = t.replace(",", "")
-            if (num.matches(Regex("""^-?\d+(\.\d+)?$"""))) num.toDouble() else null
+        // 1) Find side index (B/S/BUY/SELL)
+        val sideIndex = parts.indexOfFirst {
+            val u = it.uppercase(Locale.ENGLISH)
+            u == "B" || u == "S" || u == "BUY" || u == "SELL"
         }
-        if (numbers.size >= 2) {
-            val qty = numbers[0]
-            val price = numbers[1]
-            val symbol = tokens.take(actionIndex).joinToString(" ").trim().uppercase(Locale.getDefault())
-            if (symbol.isEmpty() || qty <= 0.0 || price <= 0.0) return null
-            return Trade(
-                symbol = symbol,
-                isin = null,
-                exchange = inferExchangeFromLine(line),
-                tradeType = if (action == "BUY") TradeType.BUY else TradeType.SELL,
-                quantity = qty,
-                price = price,
-                tradeDate = tradeDateMillis,
-                brokerage = 0.0,
-                taxes = 0.0
-            )
+        if (sideIndex <= 0 || sideIndex >= parts.size - 2) {
+            return null // no side or nothing after side
         }
-        return null
+
+        val sideToken = parts[sideIndex].uppercase(Locale.ENGLISH)
+        val tradeType = when (sideToken) {
+            "B", "BUY" -> TradeType.BUY
+            "S", "SELL" -> TradeType.SELL
+            else -> return null
+        }
+
+        // 2) Symbol is token just before side
+        val rawSymbolIsin = parts[sideIndex - 1]
+        val symbolPart = rawSymbolIsin.substringBefore("/")
+        val symbol = symbolPart.substringBefore("-").trim().uppercase(Locale.ENGLISH)
+        val isinPart = rawSymbolIsin.substringAfter("/", missingDelimiterValue = "")
+            .ifBlank { null }
+
+        // 3) Exchange is just after side, e.g. BSE / NSE
+        val exchangeIndex = sideIndex + 1
+        if (exchangeIndex >= parts.size) return null
+        val exchange = parts[exchangeIndex].uppercase(Locale.ENGLISH)
+
+        // 4) From after exchange onwards, find numeric tokens
+        val numericIndices = (exchangeIndex + 1 until parts.size).filter { idx ->
+            parts[idx].replace(",", "").toDoubleOrNull() != null
+        }
+
+        if (numericIndices.size < 2) return null
+
+        // 5) Quantity: first numeric after exchange that looks like integer
+        val qtyIndex = numericIndices.firstOrNull { !parts[it].contains('.') }
+            ?: numericIndices.first()
+
+        val quantity = parts[qtyIndex].replace(",", "").toDoubleOrNull()
+            ?: return null
+
+        // 6) Price: second last numeric on the line (before amount)
+        val priceIndex = numericIndices.getOrNull(numericIndices.size - 2) ?: return null
+        val price = parts[priceIndex].replace(",", "").toDoubleOrNull()
+            ?: return null
+
+        return Trade(
+            symbol = symbol,
+            isin = isinPart,
+            exchange = exchange,
+            quantity = quantity,
+            price = price,
+            tradeType = tradeType,
+            tradeDate = tradeDateMillis
+        )
     }
 }
