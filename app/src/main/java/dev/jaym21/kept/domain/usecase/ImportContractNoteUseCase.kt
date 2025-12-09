@@ -1,6 +1,6 @@
 package dev.jaym21.kept.domain.usecase
 
-import dev.jaym21.kept.data.pdf.PDFBoxTextExtractor
+import dev.jaym21.kept.data.pdf.PDFTextExtractor
 import dev.jaym21.kept.data.pdf.parsers.BrokerParserSelector
 import dev.jaym21.kept.domain.model.Trade
 import dev.jaym21.kept.domain.repository.TradeRepository
@@ -24,7 +24,7 @@ interface ImportContractNoteUseCase {
 }
 
 class ImportContractNoteUseCaseImpl @Inject constructor(
-    private val pdfBoxTextExtractor: PDFBoxTextExtractor,
+    private val pdfBoxExtractor: PDFTextExtractor,
     private val brokerParserSelector: BrokerParserSelector,
     private val tradeRepository: TradeRepository
 ): ImportContractNoteUseCase {
@@ -32,7 +32,7 @@ class ImportContractNoteUseCaseImpl @Inject constructor(
     override suspend fun import(filePath: String): ImportContractNoteUseCase.ImportContractNoteResult
     = withContext(Dispatchers.IO){
         return@withContext try {
-            val text = pdfBoxTextExtractor.extractTextFromFile(filePath)
+            val text = pdfBoxExtractor.extractTextFromFile(filePath)
 
             val parser = brokerParserSelector.selectParserFor(text)
                 ?: return@withContext ImportContractNoteUseCase.ImportContractNoteResult.UnknownBroker
@@ -40,14 +40,14 @@ class ImportContractNoteUseCaseImpl @Inject constructor(
             val trades: List<Trade> = parser.parse(text)
             if (trades.isEmpty()) {
                 return@withContext ImportContractNoteUseCase.ImportContractNoteResult.NoTrades(
-                    brokerName = parser.javaClass.simpleName
+                    brokerName = parser.javaClass.simpleName.replace("PDFParser", "")
                 )
             }
 
             tradeRepository.insertTrades(trades)
             ImportContractNoteUseCase.ImportContractNoteResult.Success(
                 tradesImported = trades.size,
-                brokerName = parser.javaClass.simpleName
+                brokerName = parser.javaClass.simpleName.replace("PDFParser", "")
             )
 
         } catch (e: Exception) {
