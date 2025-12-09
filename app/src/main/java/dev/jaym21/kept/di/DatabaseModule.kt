@@ -5,6 +5,7 @@ import androidx.room.Room
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.jaym21.kept.data.db.KeptDatabase
 import dev.jaym21.kept.data.db.dao.TradesDao
@@ -16,7 +17,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideKeptDatabase(context: Context): KeptDatabase {
+    fun provideKeptDatabase(@ApplicationContext context: Context): KeptDatabase {
         return Room
             .databaseBuilder(context = context, klass = KeptDatabase::class.java, name = "kept_database")
             .fallbackToDestructiveMigration(dropAllTables = true)

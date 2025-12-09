@@ -13,7 +13,5 @@ data class TradeEntity (
     val tradeType: String,
     val quantity: Double,
     val price: Double,
-    val tradeDate: Long,
-    val brokerage: Double,
-    val taxes: Double
+    val tradeDate: Long
 )

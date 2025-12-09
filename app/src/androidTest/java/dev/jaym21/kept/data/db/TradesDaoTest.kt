@@ -44,9 +44,7 @@ class TradesDaoTest {
             tradeType = "BUY",
             quantity = 1.0,
             price = 100.0,
-            tradeDate = 1000L,
-            brokerage = 0.0,
-            taxes = 0.0
+            tradeDate = 1000L
         )
         val trade2 = TradeEntity(
             symbol = "B",
@@ -55,9 +53,7 @@ class TradesDaoTest {
             tradeType = "BUY",
             quantity = 2.0,
             price = 200.0,
-            tradeDate = 2000L,
-            brokerage = 0.0,
-            taxes = 0.0
+            tradeDate = 2000L
         )
         dao.insertTrades(listOf(trade1, trade2))
 

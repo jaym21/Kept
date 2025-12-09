@@ -13,9 +13,7 @@ fun TradeEntity.toDomain(): Trade {
         tradeType = if (tradeType == "BUY") TradeType.BUY else TradeType.SELL,
         quantity = quantity,
         price = price,
-        tradeDate = tradeDate,
-        brokerage = brokerage,
-        taxes = taxes
+        tradeDate = tradeDate
     )
 }
 
@@ -28,8 +26,6 @@ fun Trade.toEntity(): TradeEntity {
         tradeType = tradeType.name,
         quantity = quantity,
         price = price,
-        tradeDate = tradeDate,
-        brokerage = brokerage,
-        taxes = taxes
+        tradeDate = tradeDate
     )
 }

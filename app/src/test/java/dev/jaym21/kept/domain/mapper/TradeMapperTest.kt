@@ -19,9 +19,7 @@ class TradeMapperTest {
             tradeType = "BUY",
             quantity = 10.0,
             price = 2500.0,
-            tradeDate = 1690000000000L,
-            brokerage = 20.0,
-            taxes = 15.0
+            tradeDate = 1690000000000L
         )
 
         val domain = entity.toDomain()

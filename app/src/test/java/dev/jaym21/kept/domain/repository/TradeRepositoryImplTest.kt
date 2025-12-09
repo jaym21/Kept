@@ -28,9 +28,7 @@ class TradeRepositoryImplTest {
                 tradeType = TradeType.BUY,
                 quantity = 5.0,
                 price = 3000.0,
-                tradeDate = 1000L,
-                brokerage = 10.0,
-                taxes = 2.0
+                tradeDate = 1000L
             )
         )
 
@@ -53,9 +51,7 @@ class TradeRepositoryImplTest {
                 tradeType = "BUY",
                 quantity = 1.0,
                 price = 100.0,
-                tradeDate = 1L,
-                brokerage = 0.0,
-                taxes = 0.0
+                tradeDate = 1L
             )
         )
         every { dao.getAllTrades() } returns flowOf(entities)
